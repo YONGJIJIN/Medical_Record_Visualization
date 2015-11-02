@@ -1,0 +1,33 @@
+{
+  "name":"Urine_Test",
+  "children":
+  [
+    {
+      "name":"Patient Information" ,
+      "children":
+      [
+        {"name":"Name: ###"},
+        {"name":"Age---24"},
+        {"name":"Sex---Male"},
+        {"name":"Address---###"},
+        {"name":"Phone---###"},
+        {"name":"Date---2015-01-01"}
+      ]
+    },
+
+    {
+      "name":"Result" ,
+      "children":
+      [
+        {"name":"IGA---1.79"},
+        {"name":"IGM---0.89"},
+        {"name":"IGG---7.95"},
+        {"name":"Albumint---44.8"},
+        {"name":"Alpha-1---2.2"},
+        {"name":"Alpha-2---4.6"},
+        {"name":"Beta glob---5.9"},
+        {"name":"Gamma glob---8.5"}
+      ]
+    }
+  ]
+}

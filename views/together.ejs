@@ -1,0 +1,994 @@
+<html>
+<head>
+    <title>Together</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+    <script type="text/javascript" src="/javascripts/bootstrap.min.js"></script>
+
+    <style type="text/css">
+        img {
+            overflow:hidden;
+        }
+
+        .node {
+            cursor: pointer;
+        }
+
+        .overlay{
+            background-color:#EEE;
+        }
+
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 1.5px;
+        }
+
+        .node text {
+            font-size:10px;
+            font-family:sans-serif;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 1.5px;
+        }
+
+        .templink {
+            fill: none;
+            stroke: red;
+            stroke-width: 3px;
+        }
+
+        .ghostCircle.show{
+            display:block;
+        }
+
+        .ghostCircle, .activeDrag .ghostCircle{
+            display: none;
+        }
+        #dialogBox{
+            z-index: 30;
+            border-style: solid;
+            border-color: #00B7FF;
+            position:relative;
+            top:20px;
+            width:60%;
+            left:20px;
+            padding: 20px;
+            display: none;
+            overflow:auto;
+            background-color: #cccccc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-5">
+                <div class="row">
+                    <div class="col-sm-5">
+                        <div class="row" style="height: 50%">
+                            <div class="col-sm-12 text-center" style="padding-left:0; padding-right:0;">
+                                <form role="form" action="/cookiePost" method="post" style="background-color: #00BFFF;">
+                                    <div class="form-group">
+                                        <label><h4><strong>Patient</strong></h4></label>
+                                        <select class="form-control" type="text" name="patientID">
+                                            <option value="" disabled="disabled" selected="selected">Select one patient</option>
+                                            <% patients.forEach(function(item){ %>
+                                            <option value="<%= item.patient_id%>"><%= item.patient_name%></option>
+                                            <% }) %>
+                                        </select>
+                                    </div>
+                                    <button id = "create_user" type="button"><strong>Create User</strong></button>
+                                    <button type="submit"><strong>Confirm</strong></button>
+                                </form>
+                                <div id="create_show_patient">
+                                    <% if(selectedPatient != []) {%>
+                                    <% patients.forEach(function(item){ %>
+                                    <% if(item.patient_id == selectedPatient) {%>
+                                    <div id = "show_basic_patient_info">
+                                        <img style="height: 180px;" src="<%= "/"+item.photo %>"/>
+                                        <table class="table" style="background-color: #6666FF;">
+                                            <caption style=" color: #030201;background-color: #6666FF;text-align: center"><h4><strong>Patient Information</strong></h4></caption>
+                                            <tbody>
+                                                <tr class="success ">
+                                                    <td style="background-color: #00CED1"><strong>Name</strong></td>
+                                                    <td style="background-color: #00CED1"><%= item.patient_name%></td>
+                                                </tr>
+                                                <tr class="success">
+                                                    <td style="background-color: #FFFF00"><strong>Gender</strong></td>
+                                                    <td style="background-color: #FFFF00"><%= item.sex%></td>
+                                                </tr>
+                                                <tr class="success">
+                                                    <td style="background-color: #00CED1"><strong>Age</strong></td>
+                                                    <td style="background-color: #00CED1"><%= item.age%></td>
+                                                </tr>
+                                                <tr class="success">
+                                                    <td style="background-color: #FFFF00"><strong>Blood Type</strong></td>
+                                                    <td style="background-color: #FFFF00"><%= item.blood_type%></td>
+                                                </tr>
+                                                <tr class="success">
+                                                    <td style="background-color: #00CED1"><strong>Allergies</strong></td>
+                                                    <td style="background-color: #00CED1"><%= item.allergies%></td>
+                                                </tr>
+                                                <tr class="success">
+                                                    <td style="background-color: #FFFF00"><strong>Address</strong></td>
+                                                    <td style="background-color: #FFFF00"><%= item.address%></td>
+                                                </tr>
+                                                <tr class="success">
+                                                    <td style="background-color: #00CED1"><strong>Phone</strong></td>
+                                                    <td style="background-color: #00CED1"><%= item.phone%></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <%}%>
+                                    <% }) %>
+                                    <% } %>
+                                    <div style = "background-color: greenyellow">
+                                        <button id = "show_hide_patient_info" style="font-size:24px"><i id = "up_down" class="fa fa-angle-double-up" ></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-12 text-center" style="padding-left:0; padding-right:0;">
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-7 text-center" style="z-index:50;padding-left:0; padding-right:0;">
+                        <form role="form" name="pointform" action='/together' method="post" style="background-color: lawngreen;alignment: center">
+                            <div class="form-group">
+                                <label for="Symptom-Category"><h4><strong>Symptom Category</strong></h4></label>
+                                <select class="form-control" id="healthcategory" name="HealthCategory"></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="X Position"><h4><strong>X Position</strong></h4></label>
+                                <input type="text" class="form-control" id="fx" name="form_x" style="font-weight:900" placeholder="Enter X_Position">
+                            </div>
+                            <div class="form-group">
+                                <label for="Y Position"><h4><strong>Y Position</strong></h4></label>
+                                <input type="text" class="form-control" id="fy" name="form_y" style="font-weight:900" placeholder="Enter Y_Position">
+                            </div>
+                            <button type="submit" class="btn btn-default" style="text-align:center;"><strong>Submit</strong></button>
+                        </form>
+
+
+                        <p id="log" style = "width:100%;color : #0000ff; z-index:30; border-color: red;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-2">
+                <% if(hasCookie != []) {%>
+                    <% for(var i in patients) {%>
+                        <% if(patients[i].patient_id == selectedPatient) {%>
+                            <% if(patients[i].sex == 'Male') {%>
+                <img id="parent" src="/images/Male_<%=bodyCategory%>.png" alt="Together System" style = 'position:absolute;top:0px; z-index :7;'/>
+                <%} else {%>
+                <img id="parent" src="/images/Female_<%=bodyCategory%>.png" alt="Together System" style = 'position:absolute;top:0px; z-index :7;'/>
+                <% } %>
+                <% } %>
+                <% } %>
+                <% } %>
+                <canvas id="myCanvas" width="260" height="755" style="position:absolute;top: 0px; z-index:20" onclick=draw1(event)></canvas>
+            </div>
+
+            <div class="col-sm-5">
+                <div class="row">
+                    <div class="col-sm-6 " style="z-index:50;padding-left:0; padding-right:0;">
+                        <table class="table" style="background-color: #00CED1">
+                            <tbody>
+                                <tr class="success">
+                                    <td id = "1" onclick = "displayTogether()" style ="font-size : 20px; background-color:#00CED1;">Together System</td>
+                                </tr>
+                                <tr class="success">
+                                    <td id = "2" onclick = "displaySkeleton()" style ="font-size : 20px; background-color:#FF0033;">Skeletal System</td>
+                                </tr>
+                                <tr class="success">
+                                    <td id = "3" onclick = "displayMuscle()" style ="font-size : 20px;background-color:#6666FF;">Muscular System</td>
+                                </tr>
+                                <tr class="success">
+                                    <td id = "4" onclick = "displayCardiovascular()" style ="font-size : 20px;background-color:#CCFF33;">Cardiovascular System</td>
+                                </tr>
+                                <tr class="success">
+                                    <td id = "5" onclick = "displayDigestive()" style ="font-size : 20px;background-color:#00CC33;">Degistive System</td>
+                                </tr>
+                                <tr class="success">
+                                    <td id = "6" onclick = "displayNervous()" style ="font-size : 20px;background-color:#FF66FF;">Nervous System</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-sm-6" style="z-index:50;padding-left:0; padding-right:0;">
+                        <table class="table" style="background-color: #00CED1">
+                            <tbody>
+                            <tr class="success">
+                                <td id = "history_record" onclick = "displayHistory()" style ="font-size : 20px; background-color:#00CED1;">All History Record</td>
+                            </tr>
+                            <tr class="success">
+                                <td id = "history_record" onclick = "displaySkeletalHistory()" style ="font-size : 20px; background-color:#FF0033;">Skeletal History Record</td>
+                            </tr>
+                            <tr class="success">
+                                <td id = "history_record" onclick = "displayMuscularHistory()" style ="font-size : 20px; background-color:#6666FF;">Muscular History Record</td>
+                            </tr>
+                            <tr class="success">
+                                <td id = "history_record" onclick = "displayCardiovascularHistory()" style ="font-size : 20px; background-color:#CCFF33;">Cardiovascular History Record</td>
+                            </tr>
+                            <tr class="success">
+                                <td id = "history_record" onclick = "displayDigestiveHistory()" style ="font-size : 20px; background-color:#00CC33;">Digestive History Record</td>
+                            </tr>
+                            <tr class="success">
+                                <td id = "history_record" onclick = "displayNervousHistory()" style ="font-size : 20px; background-color:#FF66FF;">Nervous History Record</td>
+                            </tr>
+                            <tr class="success">
+                                <td id = "blood_test" onclick="location.href='http://127.0.0.1:3000/bloodTest' " style ="font-size : 20px; background-color: powderblue">Blood Test</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div id="dialogBox"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialogBox"></div>
+
+    <script>
+        var canvas = document.getElementById('myCanvas');
+        var context = canvas.getContext('2d');
+        var circles = [];
+        var icd = [];
+        var history_records = [];
+
+        $(document).ready(function(){
+            $("#create_user").click(function(){
+                document.getElementById("create_show_patient").innerHTML="";
+                createUser();
+            });
+        });
+
+        function createUser(){
+            var createUserTitle="<h2 style='background-color: #00CC33'>Create New Patient</h2><hr>";
+            var createUserTestForm="<form action='/createUserPost' method='post' role=\"form\" style = 'background-color: aquamarine; margin-top: -30px;'>"+
+                    "<div calss=\"form-group\"><label for=\"inputdefault\"><strong>Name</strong></label><input class=\"form-control\" name = 'inputname' id=\"inputName\" type=\"text\"></div>" +
+                    "<div class=\"form-group\"><label for=\"inputdefault\"><strong>Sex</strong></label><select class=\"form-control\" name = 'inputsex' id=\"inputSex\" type=\"text\"><option>please select Gender</option><option>Male</option><option>Female</option></select></div>"+
+                    "<div calss=\"form-group\"><label for=\"inputdefault\"><strong>Age</strong></label><input class=\"form-control\" name = 'inputage' id=\"inputAge\" type=\"text\"></div>" +
+                    "<div class=\"form-group\"><label for=\"inputdefault\"><strong>Photo</strong></label><select class=\"form-control\" name = 'inputphoto' id=\"inputPhoto\" type=\"text\"><option>please select Photo</option><option>images/patient1.jpg</option><option>images/patient2.jpg</option></select></div>"+
+                    "<div class=\"form-group\"><label for=\"inputdefault\"><strong>Blood Type</strong></label><select class=\"form-control\" name = 'inputbloodtype' id=\"inputBloodType\" type=\"text\"><option>please select Blood Type</option><option>A</option><option>B</option><option>O</option></select></div>"+
+                    "<div calss=\"form-group\"><label for=\"inputdefault\"><strong>Allergies</strong></label><input class=\"form-control\" name = 'inputallergies' id=\"inputAllergies\" type=\"text\"></div>" +
+                    "<div calss=\"form-group\"><label for=\"inputdefault\"><strong>Address</strong></label><input class=\"form-control\" name = 'inputaddress' id=\"inputAddress\" type=\"text\"></div>" +
+                    "<div calss=\"form-group\"><label for=\"inputdefault\"><strong>Phone</strong></label><input class=\"form-control\" name = 'inputphone' id=\"inputPhone\" type=\"text\"></div>" +
+                    "<button type=\"submit\" style = 'background-color: #00CC33' class=\"btn btn-default\"><strong>Submit</strong></button>"+
+                    "<button type='button' onclick=\"dialogClose()\" style = 'background-color: #00CC33' class=\"btn btn-default\"><strong>Close</strong></button>"+
+                    "</form>";
+            document.getElementById("create_show_patient").innerHTML=createUserTitle+createUserTestForm;
+        }
+
+        $(document).ready(function(){
+            $("#show_hide_patient_info").click(function(){
+                $("#show_basic_patient_info").slideToggle("slow",function(){
+                    //console.log($("#show_basic_patient_info").css('display'));
+                    if($("#show_basic_patient_info").css('display')=='none') {
+                        $("#show_hide_patient_info").html("<i id = \"up_down\" class=\"fa fa-angle-double-down\" ></i>");
+                    } else {
+                        $("#show_hide_patient_info").html("<i id = \"up_down\" class=\"fa fa-angle-double-up\" ></i>");
+                    }
+                });
+            });
+        });
+
+        //------Added on 27th Sep 2015---------------------------//
+        var addDiagnosisElement=function(circle_id){
+            console.log(circle_id);
+            document.getElementById("dialogBox").innerHTML="";
+            document.getElementById("dialogBox").style.backgroundColor="#00CC33";
+            var diagnosisTextTitle="<h4>Add Diagnosis<h4><hr>";
+            var diagnosisTestForm="<form action='/diagnosisPost' method='post' role=\"form\">"+
+                    "<div calss=\"form-group\"><label>ICD</label><select class=\"form-control\" type=\"text\" name='dialogdiagnosisicd' id=\"dialogIcd\"><option>G80</option><option>I20</option><option>I22</option><option>I27</option><option>K00</option><option>K55</option><option>K65</option><option>M00</option><option>M01</option><option>M60</option></select></div>" +
+                    "<div class=\"form-group\"><label>Severity</label><select class=\"form-control\" type=\"text\" value='' name='dialogdiagnosisseverity' id=\"dialogDiagnosisSeverity\"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>"+
+                    "<div class=\"form-group\"><label>Symptom</label><textarea class=\"form-control\" rows=\"3\" type=\"text\" name='dialogdiagnosissymptom' id=\"dialogDiagnosisSymptom\"></textarea></div>" +
+                    "<div class=\"form-group\"><label>Clinical Note</label><textarea class=\"form-control\" rows=\"3\" type=\"text\" name='dialogdiagnosisnote' id=\"dialogDiagnosisNote\"></textarea></div>" +
+                    "<input type='hidden' name='circleId' value='"+circle_id+"'>"+
+                    "<button type=\"submit\" class=\"btn btn-default\">Submit</button>"+
+                    "<button type='button' onclick=\"dialogClose()\" class=\"btn btn-default\">Close</button>"+
+                    "</form>";
+            document.getElementById("dialogBox").innerHTML=diagnosisTextTitle+diagnosisTestForm;
+        };
+        var addDiagnosis=function(circle_id){
+            addDiagnosisElement(circle_id);
+            document.getElementById('dialogBox').style.display="block";
+        };
+
+        var addTreatmentElement=function(circle_id){
+            console.log(circle_id);
+            document.getElementById("dialogBox").innerHTML="";
+            document.getElementById("dialogBox").style.backgroundColor="#6666FF";
+            var treatmentTextTitle="<h4>Add Treatment<h4><hr>";
+            var treatmentTestForm="<form action='/treatmentPost' method='post' role=\"form\">"+
+                    "<div calss=\"form-group\"><label>Treatment Type</label><select class=\"form-control\" type=\"text\" name='dialogtreatmentname' id=\"dialogTreatmentName\"><option>Surgery</option><option>Radiation Therapy</option><option>Chemotherapy</option><option>Immunotherapy</option><option>Targeted Therapy</option><option>Hormone Therapy</option></select></div>" +
+                    "<div class=\"form-group\"><label>Clinical Note</label><textarea class=\"form-control\" rows=\"3\" type=\"text\" name='dialogtreatmentnote' id=\"dialogTreatmentNote\"></textarea></div>" +
+                    "<input type='hidden' name='circleId' value='"+circle_id+"'>"+
+                    "<button type=\"submit\" class=\"btn btn-default\">Submit</button>"+
+                    "<button type='button' onclick=\"dialogClose()\" class=\"btn btn-default\">Close</button>"+
+                    "</form>";
+            document.getElementById("dialogBox").innerHTML=treatmentTextTitle+treatmentTestForm;
+        };
+
+        var addTreatment=function(circle_id){
+            addTreatmentElement(circle_id);
+            document.getElementById('dialogBox').style.display="block";
+        };
+
+        var addMedicationElement=function(circle_id){
+            console.log(circle_id);
+            document.getElementById("dialogBox").innerHTML="";
+            document.getElementById("dialogBox").style.backgroundColor="orange";
+            var medicationTextTitle="<h4>Add Medication/Drug<h4><hr>";
+            var medicationTestForm="<form action='/medicationPost' method='post' role=\"form\">"+
+                    "<div calss=\"form-group\"><label>Medication/Drug Name</label><textarea class=\"form-control\" type=\"text\" name='dialogmedicationname' id=\"dialogMedicationDrugName\"></textarea></div>" +
+                    "<div class=\"form-group\"><label>Dosage</label><textarea class=\"form-control\" rows=\"3\" type=\"text\" name='dialogmedicationdosage' id=\"dialogMedicationDosage\"></textarea></div>" +
+                    "<div class=\"form-group\"><label>Frequency</label><textarea class=\"form-control\" rows=\"3\" type=\"text\" name='dialogmedicationfrequency' id=\"dialogMedicationFrequency\"></textarea></div>" +
+                    "<div class=\"form-group\"><label>Clinical Note</label><textarea class=\"form-control\" rows=\"3\" type=\"text\" name='dialogmedicationtnote' id=\"dialogMedicationNote\"></textarea></div>" +
+                    "<input type='hidden' name='circleId' value='"+circle_id+"'>"+
+                    "<button type=\"submit\" class=\"btn btn-default\">Submit</button>"+
+                    "<button type='button' onclick=\"dialogClose()\" class=\"btn btn-default\">Close</button>"+
+                    "</form>";
+            document.getElementById("dialogBox").innerHTML=medicationTextTitle+medicationTestForm;
+        };
+
+        var addMedication=function(circle_id){
+            addMedicationElement(circle_id);
+            document.getElementById('dialogBox').style.display="block";
+        };
+
+        var addScanElement=function(circle_id){
+            console.log(circle_id);
+            document.getElementById("dialogBox").innerHTML="";
+            document.getElementById("dialogBox").style.backgroundColor="#00B7FF";
+            var scanTextTitle="<h4>Add Scan Note<h4><hr>";
+            var scanTestForm="<form action='/scanPost' method='post' enctype=\"multipart/form-data\">"+
+                    "<div class=\"form-group\"><label>Upload Scan Image</label><input type='file' name='image'></div>" +
+                    "<div class=\"form-group\"><label>Clinical Note</label><textarea class=\"form-control\" rows=\"3\" type=\"text\" name='dialogscannote' id=\"dialogScanNote\"></textarea></div>" +
+                    "<input type='hidden' name='circleId' value='"+circle_id+"'>"+
+                    "<button type=\"submit\" class=\"btn btn-default\">Submit</button>"+
+                    "<button type='button' onclick=\"dialogClose()\" class=\"btn btn-default\">Close</button>"+
+                    "</form>";
+            document.getElementById("dialogBox").innerHTML=scanTextTitle+scanTestForm;
+        };
+
+        var addScan=function(circle_id){
+            addScanElement(circle_id);
+            document.getElementById('dialogBox').style.display="block";
+        };
+
+        var dialogClose=function(){
+            document.getElementById('dialogBox').style.display="none";
+        };
+
+        var latestDiagnosis = function(circle_id){
+            var link = "/detail/type=diagnosis/position="+circle_id;
+            document.getElementById('dialogBox').style.display="none";
+            document.getElementById("dialogBox").style.backgroundColor="#00CC33";
+            $.get(link,function(data,status){
+                var inner = "<p><strong>ICD_id :  </strong>"+data.ICD_id +
+                            "<br><p><strong> Symptom :  </strong>" + data.Symptom +
+                            "<br><p><strong> Severity :  </strong>" + data.Severity +
+                            "<br><p><strong> Clinical Note :  </strong>" + data.Clinical_note + "</p>";
+                document.getElementById('dialogBox').innerHTML = inner;
+                document.getElementById('dialogBox').style.display="block";
+            });
+        };
+
+        var latestTreatment = function(circle_id){
+            var link = "/detail/type=treatment/position="+circle_id;
+            document.getElementById('dialogBox').style.display="none";
+            document.getElementById("dialogBox").style.backgroundColor="#6666FF";
+            $.get(link,function(data,status){
+                var inner = "<p><strong>Treatment Name :  </strong>"+data.Treatment_name +
+                        "<br><p><strong> Clinical Note :  </strong>" + data.Clinical_note + "</p>";
+                document.getElementById('dialogBox').innerHTML = inner;
+                document.getElementById('dialogBox').style.display="block";
+            });
+        };
+
+        var latestMedication = function(circle_id){
+            var link = "/detail/type=medication/position="+circle_id;
+            document.getElementById('dialogBox').style.display="none";
+            document.getElementById("dialogBox").style.backgroundColor="orange";
+            $.get(link,function(data,status){
+                var inner = "<p><strong>Medication Name :  </strong>"+data.Medication_name +
+                        "<br><p><strong> Dosage :  </strong>" + data.Dosage +
+                        "<br><p><strong> Frequency :  </strong>" + data.Frequency +
+                        "<br><p><strong> Clinical Note :  </strong>" + data.Clinical_note + "</p>";
+                document.getElementById('dialogBox').innerHTML = inner;
+                document.getElementById('dialogBox').style.display="block";
+            });
+        };
+
+        var latestScan = function(circle_id){
+            var link = "/detail/type=scanning/position="+circle_id;
+            document.getElementById("dialogBox").style.back="";
+            document.getElementById('dialogBox').style.display="none";
+            document.getElementById("dialogBox").style.backgroundColor="#00B7FF";
+            $.get(link,function(data,status){
+                var inner = "<p><strong>Clinical Note :  </strong>"+data.Clinical_note+ "</p>" +" <br>" + "<img src="+data.Image_url+" />";
+                document.getElementById('dialogBox').innerHTML = inner;
+                document.getElementById('dialogBox').style.display="block";
+            });
+        };
+        //------Added on 27th Sep 2015---------------------------//
+        var draw = function (context, x, y, icd, image_type, description, severity, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext) {
+            context.beginPath();
+            context.arc(x, y, radius, 0, 2 * Math.PI, false);
+
+            context.lineWidth = linewidth;
+            if(image_type == "Skeleton") {
+                strokestyle = "#FF0033";
+                context.strokeStyle = strokestyle;
+            }else if(image_type == "Muscular"){
+                strokestyle ="#6666FF";
+                context.strokeStyle = strokestyle;
+            }else if(image_type == "Cardiovascular"){
+                strokestyle ="#CCFF33";
+                context.strokeStyle = strokestyle;
+            }else if(image_type == "Digestive"){
+                strokestyle ="#00CC33";
+                context.strokeStyle = strokestyle;
+            }else if(image_type == "Nervous"){
+                strokestyle ="#FF66FF";
+                context.strokeStyle = strokestyle;
+            }else{
+                strokestyle ="#000000";
+                context.strokeStyle = strokestyle;
+            }
+            context.stroke();
+
+            context.fillStyle = fontcolor;
+            context.textAlign = textalign;
+            context.font = fonttype;
+
+        };
+
+        var Circle = function(x, y, icd, image_type, description, severity, radius, filltext) {
+            this.left = x - radius;
+            this.top = y - radius;
+            this.right = x + radius;
+            this.bottom = y + radius;
+            this.icd = icd;
+            this.severity = severity;
+            this.image_type = image_type;
+            this.description = description;
+            this.position_id = filltext;
+            //console.log("circle : " + this.position_id);
+            console.log(radius);
+        };
+
+        var history_record = function(id, surgery, medication, blood_test){
+            this.id = id;
+            this.surgery = surgery;
+            this.medication = medication;
+            this.blood_test = blood_test;
+        }
+
+        function historyRecords(id, surgery, medication, blood_Test){
+            var historyRecord = new history_record(id, surgery, medication, blood_Test);
+            history_records.push(historyRecord);
+        }
+
+        var drawCircle = function (context, x, y, icd, image_type, description, severity, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext, circles) {
+            draw(context, x, y, icd, image_type, description, severity, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext);
+            var circle = new Circle(x, y, icd, image_type, description, severity, radius, filltext);
+            circles.push(circle);
+        };
+
+        function displayTogether(){
+            window.open("http://127.0.0.1:3000/together/together", "_self");
+        }
+        function displaySkeleton(){
+            window.open("http://127.0.0.1:3000/together/Skeleton", "_self");
+        }
+        function displayMuscle(){
+            window.open("http://127.0.0.1:3000/together/Muscular", "_self");
+        }
+        function displayCardiovascular(){
+            window.open("http://127.0.0.1:3000/together/Cardiovascular", "_self");
+        }
+        function displayDigestive(){
+            window.open("http://127.0.0.1:3000/together/Digestive", "_self");
+        }
+        function displayNervous(){
+            window.open("http://127.0.0.1:3000/together/Nervous", "_self");
+        }
+        function displayHistory(){
+            window.open("http://127.0.0.1:3000/history/type=all/position=0","_self");
+        }
+
+        function displaySkeletalHistory(){
+            window.open("http://127.0.0.1:3000/history/type=all/position=Skeleton","_self");
+        }
+
+        function displayMuscularHistory(){
+            window.open("http://127.0.0.1:3000/history/type=all/position=Muscular","_self");
+        }
+
+        function displayCardiovascularHistory(){
+            window.open("http://127.0.0.1:3000/history/type=all/position=Cardiovascular","_self");
+        }
+
+        function displayDigestiveHistory(){
+            window.open("http://127.0.0.1:3000/history/type=all/position=Digestive","_self");
+        }
+
+        function displayNervousHistory(){
+            window.open("http://127.0.0.1:3000/history/type=all/position=Nervous","_self");
+        }
+
+        function displayAllPositionHistory(pid){
+            window.open("http://127.0.0.1:3000/history/type=all/position="+pid,"_self");
+        }
+
+        function displayDiagnosisHistory(pid){
+            window.open("http://127.0.0.1:3000/history/type=diagnosis/position="+pid,"_self");
+        }
+
+        function displayTreatmentHistory(pid){
+            window.open("http://127.0.0.1:3000/history/type=treatment/position="+pid,"_self");
+        }
+
+        function displayMedicationHistory(pid){
+            window.open("http://127.0.0.1:3000/history/type=medication/position="+pid,"_self");
+        }
+
+        function displayScanningHistory(pid){
+            window.open("http://127.0.0.1:3000/history/type=scanning/position="+pid,"_self");
+        }
+
+        <% position.forEach(function(item){ %>
+        /* map each value of each field to table */
+        drawCircle(context, <%= item.position_x %>, <%= item.position_y %>, '<%= item.ICD_id %>','<%= item.disease_type %>','<%= item.symptom %>', '<%= item.severity %>', "green", 20, 4, "#003300", "white", "center", "bold 16px Arial", '<%= item.position_id %>', circles);
+        <% }) %>
+
+        <% var i=1; %>
+        <% pp.forEach(function(item){ %>
+        /* map each value of each field to table */
+        historyRecords('<%= item.id %>', '<%= item.surgery %>', '<%= item.medication %>','<%= item.blood_test %>');
+        <% }) %>
+
+        <% if('together' == bodyCategory) {%>
+            StandardTogether();
+            TogetherSelect();
+        <%}%>
+
+        <% if('Skeleton' == bodyCategory) {%>
+            BiggerSkeletal();
+            SkeletalSelect();
+        <%}%>
+
+        <% if('Muscular' == bodyCategory) {%>
+            BiggerMuscular();
+            MuscularSelect();
+        <%}%>
+
+        <% if('Cardiovascular' == bodyCategory) {%>
+            BiggerCardiovascular();
+            CardiovascularSelect();
+        <%}%>
+
+        <% if('Digestive' == bodyCategory) {%>
+            BiggerDigestive();
+            DigestiveSelect();
+        <%}%>
+
+        <% if('Nervous' == bodyCategory) {%>
+            BiggerNervous();
+            NervousSelect();
+        <%}%>
+
+        function TogetherSelect(){
+            var x = document.getElementById("healthcategory");
+            var option1 = document.createElement("option");
+            option1.text = "Skeleton";
+            var option2 = document.createElement("option");
+            option2.text = "Muscular";
+            var option3 = document.createElement("option");
+            option3.text = "Cardiovascular";
+            var option4 = document.createElement("option");
+            option4.text = "Digestive";
+            var option5 = document.createElement("option");
+            option5.text = "Nervous";
+            x.add(option1);
+            x.add(option2);
+            x.add(option3);
+            x.add(option4);
+            x.add(option5);
+        }
+
+        function SkeletalSelect(){
+            var x = document.getElementById("healthcategory");
+            var option1 = document.createElement("option");
+            option1.text = "Skeleton";
+            x.add(option1);
+        }
+
+        function MuscularSelect(){
+            var x = document.getElementById("healthcategory");
+            var option2 = document.createElement("option");
+            option2.text = "Muscular";
+            x.add(option2);
+        }
+
+        function CardiovascularSelect(){
+            var x = document.getElementById("healthcategory");
+            var option3 = document.createElement("option");
+            option3.text = "Cardiovascular";
+            x.add(option3);
+        }
+
+        function DigestiveSelect(){
+            var x = document.getElementById("healthcategory");
+            var option4 = document.createElement("option");
+            option4.text = "Digestive";
+            x.add(option4);
+        }
+
+        function NervousSelect(){
+            var x = document.getElementById("healthcategory");
+            var option5 = document.createElement("option");
+            option5.text = "Nervous";
+            x.add(option5);
+        }
+
+        function StandardTogether(){
+            $("#1").css('opacity','1');
+            $("#2").css('opacity','1');
+            $("#3").css('opacity','1');
+            $("#4").css('opacity','1');
+            $("#5").css('opacity','1');
+            $("#6").css('opacity','1');
+            $("#1").css('font-size','20px');
+            $("#2").css('font-size','20px');
+            $("#3").css('font-size','20px');
+            $("#4").css('font-size','20px');
+            $("#5").css('font-size','20px');
+            $("#6").css('font-size','20px');
+        }
+
+        function BiggerSkeletal(){
+            $("#1").css('opacity', '0.5');
+            $("#3").css('opacity', '0.5');
+            $("#4").css('opacity', '0.5');
+            $("#5").css('opacity', '0.5');
+            $("#6").css('opacity', '0.5');
+            $("#1").css('font-size', '20px');
+            $("#3").css('font-size', '20px');
+            $("#4").css('font-size', '20px');
+            $("#5").css('font-size', '20px');
+            $("#6").css('font-size', '20px');
+            $("#2").css('opacity', '1');
+            $("#2").css('font-size', '25px');
+        }
+
+        function BiggerMuscular(){
+            $("#1").css('opacity', '0.5');
+            $("#2").css('opacity', '0.5');
+            $("#4").css('opacity', '0.5');
+            $("#5").css('opacity', '0.5');
+            $("#6").css('opacity', '0.5');
+            $("#1").css('font-size', '20px');
+            $("#2").css('font-size', '20px');
+            $("#4").css('font-size', '20px');
+            $("#5").css('font-size', '20px');
+            $("#6").css('font-size', '20px');
+            $("#3").css('opacity', '1');
+            $("#3").css('font-size', '25px');
+        }
+
+        function BiggerCardiovascular(){
+            $("#1").css('opacity', '0.5');
+            $("#2").css('opacity', '0.5');
+            $("#3").css('opacity', '0.5');
+            $("#5").css('opacity', '0.5');
+            $("#6").css('opacity', '0.5');
+            $("#1").css('font-size', '20px');
+            $("#2").css('font-size', '20px');
+            $("#3").css('font-size', '20px');
+            $("#5").css('font-size', '20px');
+            $("#6").css('font-size', '20px');
+            $("#4").css('opacity', '1');
+            $("#4").css('font-size', '25px');
+        }
+
+        function BiggerDigestive(){
+            $("#1").css('opacity', '0.5');
+            $("#2").css('opacity', '0.5');
+            $("#3").css('opacity', '0.5');
+            $("#4").css('opacity', '0.5');
+            $("#6").css('opacity', '0.5');
+            $("#1").css('font-size', '20px');
+            $("#2").css('font-size', '20px');
+            $("#3").css('font-size', '20px');
+            $("#4").css('font-size', '20px');
+            $("#6").css('font-size', '20px');
+            $("#5").css('opacity', '1');
+            $("#5").css('font-size', '25px');
+        }
+
+        function BiggerNervous(){
+            $("#1").css('opacity', '0.5');
+            $("#2").css('opacity', '0.5');
+            $("#3").css('opacity', '0.5');
+            $("#4").css('opacity', '0.5');
+            $("#5").css('opacity', '0.5');
+            $("#1").css('font-size', '20px');
+            $("#2").css('font-size', '20px');
+            $("#3").css('font-size', '20px');
+            $("#4").css('font-size', '20px');
+            $("#5").css('font-size', '20px');
+            $("#6").css('opacity', '1');
+            $("#6").css('font-size', '25px');
+        }
+
+        $('#myCanvas').dblclick(function (e) {
+            var pos = getMousePos(canvas, e);
+            posx = pos.x;
+            posy = pos.y;
+            var clickedX = pos.x;
+            var clickedY = pos.y;
+            for (var i = 0; i < circles.length; i++) {
+                if (clickedX < circles[i].right && clickedX > circles[i].left && clickedY > circles[i].top && clickedY < circles[i].bottom) {
+                    if (circles[i].image_type == 'Skeleton') {
+                        window.open("http://127.0.0.1:3000/together/Skeleton", "_self");
+                    }
+                    if (circles[i].image_type == "Muscular") {
+                        window.open("http://127.0.0.1:3000/together/Muscular", "_self");
+                    }
+                    if (circles[i].image_type == "Cardiovascular") {
+                        window.open("http://127.0.0.1:3000/together/Cardiovascular", "_self");
+                    }
+                    if (circles[i].image_type == "Digestive") {
+                        window.open("http://127.0.0.1:3000/together/Digestive", "_self");
+                    }
+                    if (circles[i].image_type == "Nervous") {
+                        window.open("http://127.0.0.1:3000/Nervous", "_self");
+                    }
+                }
+            }
+        });
+
+        function mouseOver() {
+            var flag = 0;
+            $("#show_history").empty();
+            $("#show_history").css('left', '1100px');
+            $("#show_history").css('font-size', '15px');
+            $("#show_history").css('background-color', '#7FFF00');
+            for (var i = 0; i < history_records.length; i++) {
+                if(flag == 0){
+                    $("#show_history").append("History Id : " + history_records[i].id + " <br/>Medication : " + history_records[i].medication + "<br/>Blood Test : " + history_records[i].blood_test + "<br/>Surgery : " + history_records[i].surgery);
+                    flag = 1;
+                }else if(flag == 1){
+                    $("#show_history").append("<br/><br/>History Id : " + history_records[i].id + " <br/>Medication : " + history_records[i].medication + "<br/>Blood Test : " + history_records[i].blood_test + "<br/>Surgery : " + history_records[i].surgery);
+                }
+            }
+        }
+
+        function mouseOut(){
+            $("#show_history").empty();
+        }
+
+        function draw1(e) {
+            var pos = getMousePos(canvas, e);
+            posx = pos.x;
+            posy = pos.y;
+            document.pointform.form_x.value = posx;
+            document.pointform.form_y.value = posy;
+            context.clearRect ( 0 , 0 , canvas.width, canvas.height );
+
+            circles = [];
+            <% position.forEach(function(item){ %>
+            /* map each value of each field to table */
+            console.log("In draw1 <%= item.ICD_id%> , <%= item.position_id%>");
+            drawCircle(context, <%= item.position_x %>, <%= item.position_y %>, '<%= item.ICD_id %>','<%= item.disease_type %>','<%= item.symptom %>', '<%= item.severity %>', "green", 20, 4, "#003300", "white", "center", "bold 16px Arial", <%= item.position_id %>, circles);
+            <% }) %>
+            /****************************************************************************/
+            console.log("Size: "+ circles.length);
+            var clickedX = posx//e.pageX - this.offsetLeft-667;
+            var clickedY = posy//e.pageY - this.offsetTop;
+            var flag = 0;
+            for (var i = 0; i < circles.length; i++) {
+                if (clickedX < circles[i].right && clickedX > circles[i].left && clickedY > circles[i].top && clickedY < circles[i].bottom) {
+                    if(circles[i].image_type == "Skeleton"){
+                        $( "#log").empty();
+                        $("#log").css('border','2px');
+                        $("#log").css('border-color','red');
+                        $("#log").css('border-style','solid');
+                        $( "#log" ).append("<b>Image type : </b>" +
+                                circles[i].image_type +
+                                " <br/><b>ICD number : </b>"+
+                                circles[i].icd +
+                                " <br/><b>Severity : </b>"+
+                                circles[i].severity +
+                                "<br/><b>Symptom : </b>" +
+                                circles[i].description+
+                                "<br><br><button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"addDiagnosis("+ circles[i].position_id+")\">Add Diagnosis</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"latestDiagnosis("+ circles[i].position_id+")\">Latest Diagnosis</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"displayDiagnosisHistory("+ circles[i].position_id+")\">Diagnosis History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"addTreatment("+ circles[i].position_id+")\">Add Treatment</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"latestTreatment("+ circles[i].position_id+")\">Latest Treatment</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"displayTreatmentHistory("+ circles[i].position_id+")\">Treatment History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"addMedication("+ circles[i].position_id+")\">Add Medication</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"latestMedication("+ circles[i].position_id+")\">Latest Medication</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"displayMedicationHistory("+ circles[i].position_id+")\">Medication History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"addScan("+ circles[i].position_id+")\">Upload Scanning</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"latestScan("+ circles[i].position_id+")\">Latest Scanning</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"displayScanningHistory("+ circles[i].position_id+")\">Scanning History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-danger btn-sm\" onclick=\"displayAllPositionHistory("+ circles[i].position_id+")\">All History</button><a> </a>"+
+                                "<br><br>"
+                        );
+                        BiggerSkeletal();
+                    }
+                    if(circles[i].image_type == "Muscular"){
+                        $( "#log").empty();
+                        $("#log").css('border','2px');
+                        $("#log").css('border-color','red');
+                        $("#log").css('border-style','solid');
+                        $( "#log" ).append("<b>Image type : </b>" +
+                                circles[i].image_type +
+                                " <br/><b>ICD number : </b>"+
+                                circles[i].icd +
+                                " <br/><b>Severity : </b>"+
+                                circles[i].severity +
+                                "<br/><b>Symptom : </b>" +
+                                circles[i].description+
+                                "<br><br><button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"addDiagnosis("+ circles[i].position_id+")\">Add Diagnosis</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"latestDiagnosis("+ circles[i].position_id+")\">Latest Diagnosis</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"displayDiagnosisHistory("+ circles[i].position_id+")\">Diagnosis History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"addTreatment("+ circles[i].position_id+")\">Add Treatment</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"latestTreatment("+ circles[i].position_id+")\">Latest Treatment</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"displayTreatmentHistory("+ circles[i].position_id+")\">Treatment History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"addMedication("+ circles[i].position_id+")\">Add Medication</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"latestMedication("+ circles[i].position_id+")\">Latest Medication</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"displayMedicationHistory("+ circles[i].position_id+")\">Medication History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"addScan("+ circles[i].position_id+")\">Upload Scanning</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"latestScan("+ circles[i].position_id+")\">Latest Scanning</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"displayScanningHistory("+ circles[i].position_id+")\">Scanning History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-danger btn-sm\" onclick=\"displayAllPositionHistory("+ circles[i].position_id+")\">All History</button><a> </a>"+
+                                "<br><br>"
+                        );
+                        BiggerMuscular();
+                    }
+                    if(circles[i].image_type == "Cardiovascular"){
+                        $( "#log").empty();
+                        $("#log").css('border','2px');
+                        $("#log").css('border-color','red');
+                        $("#log").css('border-style','solid');
+                        $( "#log" ).append("<b>Image type : </b>" +
+                                circles[i].image_type +
+                                " <br/><b>ICD number : </b>"+
+                                circles[i].icd +
+                                " <br/><b>Severity : </b>"+
+                                circles[i].severity +
+                                "<br/><b>Symptom : </b>" +
+                                circles[i].description+
+                                "<br><br><button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"addDiagnosis("+ circles[i].position_id+")\">Add Diagnosis</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"latestDiagnosis("+ circles[i].position_id+")\">Latest Diagnosis</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"displayDiagnosisHistory("+ circles[i].position_id+")\">Diagnosis History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"addTreatment("+ circles[i].position_id+")\">Add Treatment</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"latestTreatment("+ circles[i].position_id+")\">Latest Treatment</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"displayTreatmentHistory("+ circles[i].position_id+")\">Treatment History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"addMedication("+ circles[i].position_id+")\">Add Medication</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"latestMedication("+ circles[i].position_id+")\">Latest Medication</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"displayMedicationHistory("+ circles[i].position_id+")\">Medication History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"addScan("+ circles[i].position_id+")\">Upload Scanning</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"latestScan("+ circles[i].position_id+")\">Latest Scanning</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"displayScanningHistory("+ circles[i].position_id+")\">Scanning History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-danger btn-sm\" onclick=\"displayAllPositionHistory("+ circles[i].position_id+")\">All History</button><a> </a>"+
+                                "<br><br>"
+                        );
+                        BiggerCardiovascular();
+                    }
+                    if(circles[i].image_type == "Digestive"){
+                        $( "#log").empty();
+                        $("#log").css('border','2px');
+                        $("#log").css('border-color','red');
+                        $("#log").css('border-style','solid');
+                        $( "#log" ).append("<b>Image type : </b>" +
+                                circles[i].image_type +
+                                " <br/><b>ICD number : </b>"+
+                                circles[i].icd +
+                                " <br/><b>Severity : </b>"+
+                                circles[i].severity +
+                                "<br/><b>Symptom : </b>" +
+                                circles[i].description+
+                                "<br><br><button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"addDiagnosis("+ circles[i].position_id+")\">Add Diagnosis</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"latestDiagnosis("+ circles[i].position_id+")\">Latest Diagnosis</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"displayDiagnosisHistory("+ circles[i].position_id+")\">Diagnosis History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"addTreatment("+ circles[i].position_id+")\">Add Treatment</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"latestTreatment("+ circles[i].position_id+")\">Latest Treatment</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"displayTreatmentHistory("+ circles[i].position_id+")\">Treatment History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"addMedication("+ circles[i].position_id+")\">Add Medication</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"latestMedication("+ circles[i].position_id+")\">Latest Medication</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"displayMedicationHistory("+ circles[i].position_id+")\">Medication History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"addScan("+ circles[i].position_id+")\">Upload Scanning</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"latestScan("+ circles[i].position_id+")\">Latest Scanning</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"displayScanningHistory("+ circles[i].position_id+")\">Scanning History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-danger btn-sm\" onclick=\"displayAllPositionHistory("+ circles[i].position_id+")\">All History</button><a> </a>"+
+                                "<br><br>"
+                        );
+                        BiggerDigestive();
+                    }
+                    if(circles[i].image_type == "Nervous"){
+                        $( "#log").empty();
+                        $("#log").css('border','2px');
+                        $("#log").css('border-color','red');
+                        $("#log").css('border-style','solid');
+                        $( "#log" ).append("<b>Image type : </b>" +
+                                circles[i].image_type +
+                                " <br/><b>ICD number : </b>"+
+                                circles[i].icd +
+                                " <br/><b>Severity : </b>"+
+                                circles[i].severity +
+                                "<br/><b>Symptom : </b>" +
+                                circles[i].description+
+                                "<br><br><button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"addDiagnosis("+ circles[i].position_id+")\">Add Diagnosis</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"latestDiagnosis("+ circles[i].position_id+")\">Latest Diagnosis</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-success btn-sm\" onclick=\"displayDiagnosisHistory("+ circles[i].position_id+")\">Diagnosis History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"addTreatment("+ circles[i].position_id+")\">Add Treatment</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"latestTreatment("+ circles[i].position_id+")\">Latest Treatment</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-primary btn-sm\" onclick=\"displayTreatmentHistory("+ circles[i].position_id+")\">Treatment History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"addMedication("+ circles[i].position_id+")\">Add Medication</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"latestMedication("+ circles[i].position_id+")\">Latest Medication</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-warning btn-sm\" onclick=\"displayMedicationHistory("+ circles[i].position_id+")\">Medication History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"addScan("+ circles[i].position_id+")\">Upload Scanning</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"latestScan("+ circles[i].position_id+")\">Latest Scanning</button><a> </a>"+
+                                "<button type=\"button\" class=\"btn btn-info btn-sm\" onclick=\"displayScanningHistory("+ circles[i].position_id+")\">Scanning History</button><a> </a>"+
+                                "<br><br><button type=\"button\" class=\"btn btn-danger btn-sm\" onclick=\"displayAllPositionHistory("+ circles[i].position_id+")\">All History</button><a> </a>"+
+                                "<br><br>"
+                        );
+                        BiggerNervous();
+                    }
+                    flag = 0;
+                    break;
+                }else{
+                    flag = 1;
+                }
+            }
+            if(flag == 1){
+                $("#log").css('border','0px');
+                $( "#log").empty();
+                StandardTogether()
+            }
+
+            context.beginPath();
+            context.arc(posx, posy, 6, 0, 2 * Math.PI, false);
+            context.fillStyle = "#000000";
+            context.fill();
+
+        }
+
+        function getMousePos(canvas, evt) {
+            var rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Cluster</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+</head>
+
+<style>
+
+    .node circle {
+        fill: #FFFF00;
+        stroke: #FF0000;
+        stroke-width: 2.5px;
+    }
+
+    .node {
+        font: 12px sans-serif;
+    }
+
+    .link {
+        fill: none;
+        stroke: #0000CD;
+        stroke-width: 1.5px;
+    }
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<div id="l5" style="position: absolute; left:1000px; background-color : pink; z-index: 20"></div>
+<script>
+
+    var width = 500, height = 500;
+
+    var cluster = d3.layout.cluster()
+            .size([width, height - 200]);
+
+    var diagonal = d3.svg.diagonal()
+            .projection(function(d) { return [d.y, d.x]; });
+
+    var svg = d3.select("#l5").append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("fill", "green")
+            .append("g")
+            .attr("transform", "translate(80,0)");
+
+
+
+    d3.json("/images/bloodTest.json", function(error, root) {
+
+        var nodes = cluster.nodes(root);
+        var links = cluster.links(nodes);
+
+        console.log(nodes);
+        console.log(links);
+
+        var link = svg.selectAll(".link")
+                .data(links)
+                .enter()
+                .append("path")
+                .attr("class", "link")
+                .attr("d", diagonal)
+                .attr("stroke", "#6495ED");
+
+        //svg.append("rect")
+        //.attr("width", "100%")
+        // .attr("height", "100%")
+        //.attr("opacity", "0.5")
+        // .attr("fill", "pink");
+
+        var node = svg.selectAll(".node")
+                .data(nodes)
+                .enter()
+                .append("g")
+                .attr("class", "node")
+                .attr("transform", function(d) { return "translate(" + d.y + "," + d.x + ")"; })
+
+        node.append("circle")
+                .attr("r", 4.5);
+
+        node.append("text")
+                .attr("dx", function(d) { return d.children ? -8 : 8; })
+                .attr("dy", 3)
+                .style("text-anchor", function(d) { return d.children ? "end" : "start"; })
+                .text(function(d) { return d.name; });
+    });
+
+
+</script>
+
+</body>
+</html>  

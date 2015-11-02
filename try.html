@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="generator" content=
+            "HTML Tidy for Windows (vers 25 March 2009), see www.w3.org">
+    <title></title>
+    <script type="text/javascript">
+        function setXY() {
+            var oZ = document.getElementById('z')
+            function setX(x) {
+                oZ.style.left = isNaN(x) ? 0 : x % 100
+            }
+            function setY(y) {
+                oZ.style.top = isNaN(y) ? 0 : y % 100
+            }
+            setX(document.getElementById('x').value)
+            setY(document.getElementById('y').value)
+        }
+    </script>
+</head>
+<body>
+<div onclick="setXY()" style=
+        "position:absolute; top:0; left:0; height:300px; width:300px; background-color:yellow">
+</div>
+<div id='z' style="position:absolute; top:0; left:0">
+    z
+</div><br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<form>
+    x: <input id='x' value='0'> y: <input id='y' value='0'>
+</form>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        .under
+        {
+            position:absolute;
+            left:0px;
+            top:0px;
+            z-index:-1;
+        }
+        .over
+        {
+            position:absolute;
+            left:0px;
+            top:0px;
+            z-index:-1;
+        }
+    </style>
+    <script>
+        function writeText(txt) {
+            document.getElementById("desc").innerHTML = txt;
+        }
+        function point_it(event){
+            pos_x = event.offsetX?(event.offsetX):event.pageX-document.getElementById("pointer_div").offsetLeft;
+            pos_y = event.offsetY?(event.offsetY):event.pageY-document.getElementById("pointer_div").offsetTop;
+            document.pointform.form_x.value = pos_x;
+            document.pointform.form_y.value = pos_y;
+        }
+    </script>
+
+
+</head>
+<body>
+<form name="pointform">
+    <img src="public/images/muscles_chest_upper_back.png"  class="over " style ="opacity:1" onclick="point_it(event)"  />
+    <p>You pointed on x = <input type="text" name="form_x" size="4" /> - y = <input type="text" name="form_y" size="4" /></p>
+    <input type="submit" value="Submit" />
+</form>
+
+</body>
+</html>
+
+

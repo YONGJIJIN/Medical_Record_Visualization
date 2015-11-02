@@ -1,0 +1,159 @@
+<html>
+<head>
+    <title>cardiovascular_system</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <link rel='stylesheet' href='/css/cardiovascular.css'>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <canvas id="myCanvas" width="700" height="958" onclick=draw1(event)></canvas>
+    <p id="log" style = "position:absolute; left:270px; top:100px; color : #0000ff; z-index:21;"></p>
+    <button type="button" onclick = "displayTogether()" style ="position:absolute; left:1200px; top:60px;font-size : 20px; background-color:#00CED1;opacity: 0.5">Together System</button>
+    <button type="button" onclick = "displaySkeleton()" style ="position:absolute; left:1200px; top:100px;font-size : 20px; background-color:#FF0033;opacity: 0.5">Skeletal System</button>
+    <button type="button" onclick = "displayMuscle()" style ="position:absolute; left:1200px; top:140px;font-size : 20px;background-color:#6666FF;opacity: 0.5">Muscular System</button>
+    <button type="button" onclick = "displayCardiovascular()" style ="position:absolute; left:1200px; top:180px;font-size : 25px;background-color:#CCFF33;">Cardiovascular System</button>
+    <button type="button" onclick = "displayDigestive()" style ="position:absolute; left:1200px; top:220px;font-size : 20px;background-color:#00CC33;opacity: 0.5">Digestive System</button>
+    <button type="button" onclick = "displayNervous()" style ="position:absolute; left:1200px; top:260px;font-size : 20px;background-color:#FF66FF;opacity: 0.5">Nervous System</button>
+
+    <div>
+        <form role="form" name="pointform" action='' method="post" style="position : absolute; left:50px; top:200px; background-color:#CCFF33">
+            <div class="form-group">
+                <label for="ICD">ICD Number:</label>
+                <input type="text" class="form-control" id="icd" name="icd_number" style="font-weight:900" placeholder="Enter ICD">
+            </div>
+            <div class="form-group">
+                <label for="ICD">Time (year-month-day):</label>
+                <input type="text" class="form-control" id="time" name="time" style="font-weight:900" placeholder="Enter Time">
+            </div>
+            <div class="form-group">
+                <label for="ICD">Severity (1-5):</label>
+                <input type="text" class="form-control" id="severity" name="severity" style="font-weight:900" placeholder="Enter Severity">
+            </div>
+            <div class="form-group">
+                <label for="X Position">X Position:</label>
+                <input type="text" class="form-control" id="fx" name="form_x" style="font-weight:900" placeholder="Enter X_Position">
+            </div>
+            <div class="form-group">
+                <label for="Y Position">Y Position:</label>
+                <input type="text" class="form-control" id="fy" name="form_y" style="font-weight:900" placeholder="Enter Y_Position">
+            </div>
+            <button type="submit" class="btn btn-default">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        var canvas = document.getElementById('myCanvas');
+        var context = canvas.getContext('2d');
+        var circles = [];
+        var icd = [];
+
+        var draw = function (context, x, y, icd, image_type, description, time, severity, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext) {
+            context.beginPath();
+            context.arc(x, y, radius, 0, 2 * Math.PI, false);
+
+            context.lineWidth = linewidth;
+            context.strokeStyle = strokestyle;
+            context.stroke();
+
+            context.fillStyle = fontcolor;
+            context.textAlign = textalign;
+            context.font = fonttype;
+        };
+
+        var Circle = function(x, y, icd, image_type,description, time, severity, radius) {
+            this.left = x - radius;
+            this.top = y - radius;
+            this.right = x + radius;
+            this.bottom = y + radius;
+            this.icd = icd;
+            this.time = time;
+            this.severity = severity;
+            this.image_type = image_type;
+            this.description = description;
+        };
+
+        var drawCircle = function (context, x, y, icd,image_type,description, time, severity, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext, circles) {
+            draw(context, x, y, icd,image_type, description, time, severity, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext);
+            var circle = new Circle(x, y, icd, image_type, description, time, severity, radius);
+            circles.push(circle);
+        };
+
+        function displayTogether(){
+            window.open("http://127.0.0.1:3000/together", "_self");
+        }
+        function displaySkeleton(){
+            window.open("http://127.0.0.1:3000/skeletal", "_self");
+        }
+        function displayMuscle(){
+            window.open("http://127.0.0.1:3000/muscular", "_self");
+        }
+        function displayCardiovascular(){
+            window.open("http://127.0.0.1:3000/cardiovascular", "_self");
+        }
+        function displayDigestive(){
+            window.open("http://127.0.0.1:3000/digestive", "_self");
+        }
+        function displayNervous(){
+            window.open("http://127.0.0.1:3000/nervous", "_self");
+        }
+
+        <% var i=1; %>
+        <% tt.forEach(function(item){ %>
+        /* map each value of each field to table */
+        drawCircle(context, <%= item.p_x %>, <%= item.p_y %>, '<%= item.icd_no %>','<%= item.image_type %>','<%= item.description %>','<%= item.time %>','<%= item.severity %>', "green", 20, 4, "#CCFF33", "white", "center", "bold 16px Arial", <%= item.id %>, circles);
+        <% }) %>
+
+        $('#myCanvas').click(function (e) {
+            var clickedX = e.pageX - this.offsetLeft;
+            var clickedY = e.pageY - this.offsetTop;
+            var flag = 0;
+
+            for (var i = 0; i < circles.length; i++) {
+                if (clickedX < circles[i].right && clickedX > circles[i].left && clickedY > circles[i].top && clickedY < circles[i].bottom) {
+                    $( "#log").empty();
+                    $("#log").css('border','2px');
+                    $("#log").css('border-color','red');
+                    $("#log").css('border-style','solid');
+                    $( "#log" ).append("<b>Image type : </b>" + circles[i].image_type + " <br/><b>ICD number : </b>"+ circles[i].icd + " <br/><b>Time : </b>" + circles[i].time + " <br/><b>Severity : </b>"+ circles[i].severity + "<br/><b>Description : </b>" + circles[i].description );
+                    flag = 0;
+                    break;
+                }else{
+                    flag = 1;
+                }
+            }
+            if(flag == 1){
+                $("#log").css('border','0px');
+                $( "#log").empty();
+            }
+        });
+
+        function draw1(e) {
+            var pos = getMousePos(canvas, e);
+            posx = pos.x;
+            posy = pos.y;
+            document.pointform.form_x.value = posx;
+            document.pointform.form_y.value = posy;
+            context.clearRect ( 0 , 0 , canvas.width, canvas.height );
+            <% var i=1; %>
+            <% tt.forEach(function(item){ %>
+            /* map each value of each field to table */
+            drawCircle(context, <%= item.p_x %>, <%= item.p_y %>, '<%= item.icd_no %>','<%= item.image_type %>','<%= item.description %>','<%= item.time %>','<%= item.severity %>', "green", 20, 4, "#0000FF", "white", "center", "bold 16px Arial", <%= item.id %>, circles);
+            <% }) %>
+            context.fillStyle = "#000000";
+            context.beginPath();
+            context.arc(posx, posy, 6, 0, 2*Math.PI);
+            context.fill();
+        }
+
+        function getMousePos(canvas, evt) {
+            var rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.clientX - rect.left,
+                y: evt.clientY - rect.top
+            };
+        }
+    </script>
+</body>
+</html>

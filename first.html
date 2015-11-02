@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <style type="text/css">
+        .under
+        {
+            position:absolute;
+            left:0px;
+            top:0px;
+            z-index:-1;
+        }
+        .over
+        {
+            position:absolute;
+            left:0px;
+            top:0px;
+            z-index:-1;
+        }
+    </style>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <script>
+        function writeText(txt) {
+            document.getElementById("desc").innerHTML = txt;
+        }
+
+        function point_it(event){
+            pos_x = event.offsetX?(event.offsetX):event.pageX-document.getElementById("pointer_div").offsetLeft;
+            pos_y = event.offsetY?(event.offsetY):event.pageY-document.getElementById("pointer_div").offsetTop;
+            document.pointform.form_x.value = pos_x;
+            document.pointform.form_y.value = pos_y;
+        }
+
+
+        function show_html(){
+            window.open("second.html");
+        }
+
+
+    </script>
+
+</head>
+<body>
+    <form name="pointform">
+            <img src="public/images/Female_Muscular.png" id="pointer_div" usemap ="#chester_map" class="over " style ="opacity:1"  onclick="point_it(event)"  />
+            <map name="chester_map">
+                <area shape="rect" coords="278,145,420,367" href="second.html" target="_blank" alt="" title="">
+            </map>
+            <p>You pointed on x = <input type="text" name="form_x" size="4" /> - y = <input type="text" name="form_y" size="4" /></p>
+            <input type="submit" value="Submit" />
+    </form>
+</body>
+</html>
+
+

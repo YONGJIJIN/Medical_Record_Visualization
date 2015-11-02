@@ -1,0 +1,534 @@
+<html>
+<head>
+    <title>together_system</title>
+    <!--
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    -->
+    <link rel='stylesheet' href='/css/try.css'>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <!--
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    -->
+    <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+
+    <script src="http://code.jquery.com/ui/1.11.1/jquery-ui.min.js"></script>
+
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css" />
+
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    <!--
+    <script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+    <script src="dndTree.js"></script>
+    -->
+    <style type="text/css">
+        img {
+            overflow:hidden;
+        }
+
+        .node {
+            cursor: pointer;
+        }
+
+        .overlay{
+            background-color:#EEE;
+        }
+
+        .node circle {
+            fill: #fff;
+            stroke: steelblue;
+            stroke-width: 1.5px;
+        }
+
+        .node text {
+            font-size:10px;
+            font-family:sans-serif;
+        }
+
+        .link {
+            fill: none;
+            stroke: #ccc;
+            stroke-width: 1.5px;
+        }
+
+        .templink {
+            fill: none;
+            stroke: red;
+            stroke-width: 3px;
+        }
+
+        .ghostCircle.show{
+            display:block;
+        }
+
+        .ghostCircle, .activeDrag .ghostCircle{
+            display: none;
+        }
+        .ui-dialog{
+
+        }
+    </style>
+</head>
+<body>
+<div>
+    <img class="over"  src="/images/together_system.png" alt="Together System" style = 'z-index :7; position: absolute; left:440px; top:0;'/>
+    <canvas id="myCanvas" width="700" height="958" onclick=draw1(event)></canvas>
+    <p id="log" style = "position:absolute; left:270px; top:100px; color : #0000ff; z-index:21; border-color: red;"></p>
+    <button id = "history" onmouseover="mouseOver()" onmouseout="mouseOut()" style ="position:absolute; left:1200px; top:350px;font-size : 20px; color:red; z-index:21; background-color:#00BFFF;">HISTORY RECORD</button>
+    <p id = "show_history" style ="position:absolute; left:1100px; top:400px;font-size : 20px; color:red; z-index:23; background-color:#00BFFF;"></p>
+    <button id = "blood_test" onclick="location.href='http://127.0.0.1:3000/bloodTest' " style ="position:absolute; left:1200px; top:480px;font-size : 20px; color:red; z-index:21; background-color:#00BFFF;">BLOOD TEST</button>
+    <button id = "chest_test" onmouseover="hand_chest()" onclick="mouseOut3()" style ="position:absolute; left:1200px; top:560px;font-size : 20px; color:red; z-index:21; background-color:#00BFFF;">SCANNING</button>
+    <div id = "show_test" style="position: absolute; z-index: 23"></div>
+</div>
+
+<button id = "1" type="button" onclick = "displayTogether()" style ="position:absolute; left:1200px; top:60px;font-size : 20px; background-color:#00CED1;">Together System</button>
+<button id = "2" type="button" onclick = "displaySkeleton()" style ="position:absolute; left:1200px; top:100px;font-size : 20px; background-color:#FF0033;">Skeletal System</button>
+<button id = "3" type="button" onclick = "displayMuscle()" style ="position:absolute; left:1200px; top:140px;font-size : 20px;background-color:#6666FF;">Muscular System</button>
+<button id = "4" type="button" onclick = "displayCardiovascular()" style ="position:absolute; left:1200px; top:180px;font-size : 20px;background-color:#CCFF33;">Cardiovascular System</button>
+<button id = "5" type="button" onclick = "displayDigestive()" style ="position:absolute; left:1200px; top:220px;font-size : 20px;background-color:#00CC33;">Digestive System</button>
+<button id = "6" type="button" onclick = "displayNervous()" style ="position:absolute; left:1200px; top:260px;font-size : 20px;background-color:#FF66FF;">Nervous System</button>
+
+<div>
+    <form role="form" name="pointform" action='' method="post" style="position : absolute; left:50px; top:200px; background-color:#CCFF33">
+        <div class="form-group">
+            <label for="ICD">ICD Number:</label>
+            <input type="text" class="form-control" id="icd" name="icd_number" style="font-weight:900" placeholder="Enter ICD">
+        </div>
+        <div class="form-group">
+            <label for="ICD">Time (year-month-day):</label>
+            <input type="text" class="form-control" id="time" name="time" style="font-weight:900" placeholder="Enter Time">
+        </div>
+        <div class="form-group">
+            <label for="ICD">Severity (1-5):</label>
+            <input type="text" class="form-control" id="severity" name="severity" style="font-weight:900" placeholder="Enter Severity">
+        </div>
+        <div class="form-group">
+            <label for="X Position">X Position:</label>
+            <input type="text" class="form-control" id="fx" name="form_x" style="font-weight:900" placeholder="Enter X_Position">
+        </div>
+        <div class="form-group">
+            <label for="Y Position">Y Position:</label>
+            <input type="text" class="form-control" id="fy" name="form_y" style="font-weight:900" placeholder="Enter Y_Position">
+        </div>
+        <button type="submit" class="btn btn-default">Submit</button>
+    </form>
+</div>
+<div id="skepodialog" titile="Basic Information">
+    <form action="#">
+        <label>ICD</label>
+        <input id="dialogicd" type="text">
+        <label>Severity</label>
+        <input id="dialogseverity" type="text">
+        <label>Description</label>
+        <input id="dialogdescription" type="text">
+        <button action="submit">Submit</button>
+</div>
+<script>
+    var canvas = document.getElementById('myCanvas');
+    var context = canvas.getContext('2d');
+    var circles = [];
+    var icd = [];
+    var history_records = [];
+
+    //------Added on 27th Sep 2015---------------------------//
+    $(function () {
+        $( "#skepodialog" ).dialog({
+            autoOpen: false
+        });
+
+        $("#testdialogbutton").click(function() {
+            console.log("Here!");
+            $("#skepodialog").dialog('open');
+        });
+    });
+    //------Added on 27th Sep 2015---------------------------//
+    var draw = function (context, x, y, icd, image_type, description, time, severity, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext) {
+        context.beginPath();
+        context.arc(x, y, radius, 0, 2 * Math.PI, false);
+
+        context.lineWidth = linewidth;
+        if(image_type == "skeletal") {
+            strokestyle = "#FF0033";
+            context.strokeStyle = strokestyle;
+        }else if(image_type == "muscular"){
+            strokestyle ="#6666FF";
+            context.strokeStyle = strokestyle;
+        }else if(image_type == "cardiovascular"){
+            strokestyle ="#CCFF33";
+            context.strokeStyle = strokestyle;
+        }else if(image_type == "digestive"){
+            strokestyle ="#00CC33";
+            context.strokeStyle = strokestyle;
+        }else if(image_type == "nervous"){
+            strokestyle ="#FF66FF";
+            context.strokeStyle = strokestyle;
+        }else{
+            strokestyle ="#000000";
+            context.strokeStyle = strokestyle;
+        }
+        context.stroke();
+
+        context.fillStyle = fontcolor;
+        context.textAlign = textalign;
+        context.font = fonttype;
+
+    };
+
+    var Circle = function(x, y, icd, image_type, description, time, severity, radius) {
+        this.left = x - radius;
+        this.top = y - radius;
+        this.right = x + radius;
+        this.bottom = y + radius;
+        this.icd = icd;
+        this.time = time;
+        this.severity = severity;
+        this.image_type = image_type;
+        this.description = description;
+    };
+
+    var history_record = function(id, surgery, medication, blood_test){
+        this.id = id;
+        this.surgery = surgery;
+        this.medication = medication;
+        this.blood_test = blood_test;
+    }
+
+    function historyRecords(id, surgery, medication, blood_Test){
+        var historyRecord = new history_record(id, surgery, medication, blood_Test);
+        history_records.push(historyRecord);
+    }
+
+    var drawCircle = function (context, x, y, icd, image_type, description, time, severity, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext, circles) {
+        draw(context, x, y, icd, image_type, description, time, severity, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext);
+        var circle = new Circle(x, y, icd, image_type, description, time, severity, radius);
+        circles.push(circle);
+    };
+
+    function displayTogether(){
+        window.open("http://127.0.0.1:3000/together", "_self");
+    }
+    function displaySkeleton(){
+        window.open("http://127.0.0.1:3000/skeletal", "_self");
+    }
+    function displayMuscle(){
+        window.open("http://127.0.0.1:3000/muscular", "_self");
+    }
+    function displayCardiovascular(){
+        window.open("http://127.0.0.1:3000/cardiovascular", "_self");
+    }
+    function displayDigestive(){
+        window.open("http://127.0.0.1:3000/digestive", "_self");
+    }
+    function displayNervous(){
+        window.open("http://127.0.0.1:3000/nervous", "_self");
+    }
+
+
+    <% var i=1; %>
+    <% tt.forEach(function(item){ %>
+    /* map each value of each field to table */
+    drawCircle(context, <%= item.p_x %>, <%= item.p_y %>, '<%= item.icd_no %>','<%= item.image_type %>','<%= item.description %>', '<%= item.time %>','<%= item.severity %>', "green", 20, 4, "#003300", "white", "center", "bold 16px Arial", <%= item.id %>, circles);
+    <% }) %>
+
+
+    <% var i=1; %>
+    <% pp.forEach(function(item){ %>
+    /* map each value of each field to table */
+    historyRecords('<%= item.id %>', '<%= item.surgery %>', '<%= item.medication %>','<%= item.blood_test %>');
+    <% }) %>
+
+    $('#myCanvas').click(function (e) {
+        var clickedX = e.pageX - this.offsetLeft;
+        var clickedY = e.pageY - this.offsetTop;
+        var flag = 0;
+
+        for (var i = 0; i < circles.length; i++) {
+            if (clickedX < circles[i].right && clickedX > circles[i].left && clickedY > circles[i].top && clickedY < circles[i].bottom) {
+                if(circles[i].image_type == "skeletal"){
+                    $( "#log").empty();
+                    $("#log").css('border','2px');
+                    $("#log").css('border-color','red');
+                    $("#log").css('border-style','solid');
+                    $( "#log" ).append("<button id='testdialogbutton'>Test</button>"+"<b>Image type : </b>" + circles[i].image_type + " <br/><b>ICD number : </b>"+ circles[i].icd + " <br/><b>Time : </b>" + circles[i].time + " <br/><b>Severity : </b>"+ circles[i].severity +"<br/><a href=http://127.0.0.1:3000/test?id="+circles[i].id+">history</a>" +"<br/><b>Description : </b>" + circles[i].description);
+                    $("#1").css('opacity','0.5');
+                    $("#3").css('opacity','0.5');
+                    $("#4").css('opacity','0.5');
+                    $("#5").css('opacity','0.5');
+                    $("#6").css('opacity','0.5');
+                    $("#1").css('font-size','20px');
+                    $("#3").css('font-size','20px');
+                    $("#4").css('font-size','20px');
+                    $("#5").css('font-size','20px');
+                    $("#6").css('font-size','20px');
+                    $("#2").css('opacity','1');
+                    $("#2").css('font-size','25px');
+                }
+                if(circles[i].image_type == "muscular"){
+                    $( "#log").empty();
+                    $("#log").css('border','2px');
+                    $("#log").css('border-color','red');
+                    $("#log").css('border-style','solid');
+                    $( "#log" ).append("<b>Image type : </b>" + circles[i].image_type + " <br/><b>ICD number : </b>"+ circles[i].icd + " <br/><b>Time : </b>" + circles[i].time + " <br/><b>Severity : </b>"+ circles[i].severity + "<br/><b>Description : </b>" + circles[i].description );
+                    $("#1").css('opacity','0.5');
+                    $("#2").css('opacity','0.5');
+                    $("#4").css('opacity','0.5');
+                    $("#5").css('opacity','0.5');
+                    $("#6").css('opacity','0.5');
+                    $("#1").css('font-size','20px');
+                    $("#2").css('font-size','20px');
+                    $("#4").css('font-size','20px');
+                    $("#5").css('font-size','20px');
+                    $("#6").css('font-size','20px');
+                    $("#3").css('opacity','1');
+                    $("#3").css('font-size','25px');
+                }
+                if(circles[i].image_type == "cardiovascular"){
+                    $( "#log").empty();
+                    $("#log").css('border','2px');
+                    $("#log").css('border-color','red');
+                    $("#log").css('border-style','solid');
+                    $( "#log" ).append("<b>Image type : </b>" + circles[i].image_type + " <br/><b>ICD number : </b>"+ circles[i].icd + " <br/><b>Time : </b>" + circles[i].time + " <br/><b>Severity : </b>"+ circles[i].severity + "<br/><b>Description : </b>" + circles[i].description );
+                    $("#1").css('opacity','0.5');
+                    $("#2").css('opacity','0.5');
+                    $("#3").css('opacity','0.5');
+                    $("#5").css('opacity','0.5');
+                    $("#6").css('opacity','0.5');
+                    $("#1").css('font-size','20px');
+                    $("#2").css('font-size','20px');
+                    $("#3").css('font-size','20px');
+                    $("#5").css('font-size','20px');
+                    $("#6").css('font-size','20px');
+                    $("#4").css('opacity','1');
+                    $("#4").css('font-size','25px');
+                }
+                if(circles[i].image_type == "digestive"){
+                    $( "#log").empty();
+                    $("#log").css('border','2px');
+                    $("#log").css('border-color','red');
+                    $("#log").css('border-style','solid');
+                    $( "#log" ).append("<b>Image type : </b>" + circles[i].image_type + " <br/><b>ICD number : </b>"+ circles[i].icd + " <br/><b>Time : </b>" + circles[i].time + " <br/><b>Severity : </b>"+ circles[i].severity + "<br/><b>Description : </b>" + circles[i].description );
+                    $("#1").css('opacity','0.5');
+                    $("#2").css('opacity','0.5');
+                    $("#3").css('opacity','0.5');
+                    $("#4").css('opacity','0.5');
+                    $("#6").css('opacity','0.5');
+                    $("#1").css('font-size','20px');
+                    $("#2").css('font-size','20px');
+                    $("#3").css('font-size','20px');
+                    $("#4").css('font-size','20px');
+                    $("#6").css('font-size','20px');
+                    $("#5").css('opacity','1');
+                    $("#5").css('font-size','25px');
+                }
+                if(circles[i].image_type == "nervous"){
+                    $( "#log").empty();
+                    $("#log").css('border','2px');
+                    $("#log").css('border-color','red');
+                    $("#log").css('border-style','solid');
+                    $( "#log" ).append("<b>Image type : </b>" + circles[i].image_type + " <br/><b>ICD number : </b>"+ circles[i].icd + " <br/><b>Time : </b>" + circles[i].time + " <br/><b>Severity : </b>"+ circles[i].severity + "<br/><b>Description : </b>" + circles[i].description );
+                    $("#1").css('opacity','0.5');
+                    $("#2").css('opacity','0.5');
+                    $("#3").css('opacity','0.5');
+                    $("#4").css('opacity','0.5');
+                    $("#5").css('opacity','0.5');
+                    $("#1").css('font-size','20px');
+                    $("#2").css('font-size','20px');
+                    $("#3").css('font-size','20px');
+                    $("#4").css('font-size','20px');
+                    $("#5").css('font-size','20px');
+                    $("#6").css('opacity','1');
+                    $("#6").css('font-size','25px');
+                }
+                if(circles[i].image_type == "scan1"){
+                    show_chest();
+                    drawCircle(context, 368.5, 261, '','','', '','', "green", 10, 4, "#000000", "white", "center", "bold 16px Arial", '', circles);
+                    drawCircle(context, 475.5, 531, '','','', '','', "green", 10, 4, "#000000", "white", "center", "bold 16px Arial", '', circles);
+                }
+                if(circles[i].image_type == "scan2"){
+                    show_hand();
+                    drawCircle(context, 368.5, 261, '','','', '','', "green", 10, 4, "#000000", "white", "center", "bold 16px Arial", '', circles);
+                    drawCircle(context, 475.5, 531, '','','', '','', "green", 10, 4, "#000000", "white", "center", "bold 16px Arial", '', circles);
+                }
+
+                flag = 0;
+                break;
+            }else{
+                flag = 1;
+            }
+        }
+        if(flag == 1){
+            $("#log").css('border','0px');
+            $( "#log").empty();
+            $("#1").css('opacity','1');
+            $("#2").css('opacity','1');
+            $("#3").css('opacity','1');
+            $("#4").css('opacity','1');
+            $("#5").css('opacity','1');
+            $("#6").css('opacity','1');
+            $("#1").css('font-size','20px');
+            $("#2").css('font-size','20px');
+            $("#3").css('font-size','20px');
+            $("#4").css('font-size','20px');
+            $("#5").css('font-size','20px');
+            $("#6").css('font-size','20px');
+            $("#show_test").empty();
+        }
+    });
+
+    $('#myCanvas').dblclick(function (e) {
+        var clickedX = e.pageX - this.offsetLeft;
+        var clickedY = e.pageY - this.offsetTop;
+
+        for (var i = 0; i < circles.length; i++) {
+            if (clickedX < circles[i].right && clickedX > circles[i].left && clickedY > circles[i].top && clickedY < circles[i].bottom) {
+                if(circles[i].image_type == "skeletal"){
+                    window.open("http://127.0.0.1:3000/skeletal", "_self");
+                }
+                if(circles[i].image_type == "muscular"){
+                    window.open("http://127.0.0.1:3000/muscular", "_self");
+                }
+                if(circles[i].image_type == "cardiovascular"){
+                    window.open("http://127.0.0.1:3000/cardiovascular", "_self");
+                }
+                if(circles[i].image_type == "digestive"){
+                    window.open("http://127.0.0.1:3000/digestive", "_self");
+                }
+                if(circles[i].image_type == "nervous"){
+                    window.open("http://127.0.0.1:3000/nervous", "_self");
+                }
+            }
+        }
+    });
+
+    //$('#history').click(function (e){
+    // $("#history" ).empty();
+    // $("#history" ).append("HISTORY_RECORD");
+    // $("#history").css('left', '1100px');
+    // $("#history").css('font-size', '15px');
+    // $("#history").css('background-color', '#7FFF00');
+    // for (var i = 0; i < history_records.length; i++) {
+    //     $("#history" ).append( "<br/><br/>History Id : " + history_records[i].id + " <br/>Medication : " + history_records[i].medication + "<br/>Blood Test : " + history_records[i].blood_test + "<br/>Surgery : " + history_records[i].surgery);
+    // }
+    //});
+
+    function mouseOver() {
+        var flag = 0;
+        $("#show_history").empty();
+        $("#show_history").css('left', '1100px');
+        $("#show_history").css('font-size', '15px');
+        $("#show_history").css('background-color', '#7FFF00');
+        for (var i = 0; i < history_records.length; i++) {
+            if(flag == 0){
+                $("#show_history").append("History Id : " + history_records[i].id + " <br/>Medication : " + history_records[i].medication + "<br/>Blood Test : " + history_records[i].blood_test + "<br/>Surgery : " + history_records[i].surgery);
+                flag = 1;
+            }else if(flag == 1){
+                $("#show_history").append("<br/><br/>History Id : " + history_records[i].id + " <br/>Medication : " + history_records[i].medication + "<br/>Blood Test : " + history_records[i].blood_test + "<br/>Surgery : " + history_records[i].surgery);
+            }
+        }
+    }
+
+    function mouseOut(){
+        $("#show_history").empty();
+    }
+
+    function draw1(e) {
+        var pos = getMousePos(canvas, e);
+        posx = pos.x;
+        posy = pos.y;
+        document.pointform.form_x.value = posx;
+        document.pointform.form_y.value = posy;
+        context.clearRect ( 0 , 0 , canvas.width, canvas.height );
+        <% var i=1; %>
+        <% tt.forEach(function(item){ %>
+        /* map each value of each field to table */
+        drawCircle(context, <%= item.p_x %>, <%= item.p_y %>, '<%= item.icd_no %>','<%= item.image_type %>','<%= item.description %>', '<%= item.time %>','<%= item.severity %>',"green", 20, 4, "#0000FF", "white", "center", "bold 16px Arial", <%= item.id %>, circles);
+        <% }) %>
+        context.fillStyle = "#000000";
+        context.beginPath();
+        context.arc(posx, posy, 6, 0, 2*Math.PI);
+        context.fill();
+    }
+
+    function getMousePos(canvas, evt) {
+        var rect = canvas.getBoundingClientRect();
+        return {
+            x: evt.clientX - rect.left,
+            y: evt.clientY - rect.top
+        };
+    }
+    /*
+     function mouseOver3(){
+     $("#show_test").empty();
+     $("#show_test").css('left', '50px');
+     $("#show_test").css('top', '10px');
+     $("#show_test").css('z-index', '21');
+
+     $('#show_test').append('<img id="test_image" onclick="chest()" src="/images/chest.jpg"/>');
+     $("#chest_test_image").css({
+     position: 'absolute',
+     top: '10px',
+     left: '10px'
+     });
+
+     $('#show_test').append('<img id="test_image" onclick="hand()" src="/images/hand.jpg"/>');
+     $("#chest_test_image").css({
+     position: 'relative',
+     top: '10px',
+     left: '500px'
+     });
+     }
+     */
+    function show_chest(){
+        $("#show_test").empty();
+        $("#show_test").css('left', '50px');
+        $("#show_test").css('top', '10px');
+        $("#show_test").css('z-index', '21');
+
+        $('#show_test').append('<img id="test_image" onclick="chest()" src="/images/chest.jpg"/>');
+        $("#chest_test_image").css({
+            position: 'absolute',
+            top: '10px',
+            left: '10px'
+        });
+    }
+
+    function show_hand(){
+        $("#show_test").empty();
+        $("#show_test").css('left', '50px');
+        $("#show_test").css('top', '10px');
+        $("#show_test").css('z-index', '21');
+
+        $('#show_test').append('<img id="test_image" onclick="hand()" src="/images/hand.jpg"/>');
+        $("#chest_test_image").css({
+            position: 'relative',
+            top: '10px',
+            left: '500px'
+        });
+    }
+
+    function mouseOut3(){
+        $("#show_test").empty();
+    }
+
+    /*
+     function chest(){
+     //$("#show_test").empty();
+     drawCircle(context, 320.5, 239, '','','', '','', "green", 10, 4, "#000000", "white", "center", "bold 16px Arial", '', circles);
+     }
+
+     function hand(){
+     //$("#show_test").empty();
+     drawCircle(context, 233.5, 503, '','','', '','', "green", 10, 4, "#000000", "white", "center", "bold 16px Arial", '', circles);
+     }
+     */
+    function hand_chest(){
+        drawCircle(context, 368.5, 261, '','','', '','', "green", 10, 4, "#000000", "white", "center", "bold 16px Arial", '', circles);
+        drawCircle(context, 475.5, 531, '','','', '','', "green", 10, 4, "#000000", "white", "center", "bold 16px Arial", '', circles);
+        var circle1 = new Circle(368.5, 261, '1', 'scan1', '1', '1', '1', 20);
+        var circle2 = new Circle(475.5, 531, '1', 'scan2', '1', '1', '1', 20);
+        circles.push(circle1);
+        circles.push(circle2);
+    }
+</script>
+</body>
+</html>
